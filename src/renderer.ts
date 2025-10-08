@@ -328,37 +328,84 @@ export class Renderer {
    * Render gates
    */
   renderGates(gates: Gate[]): void {
+    const time = Date.now();
+
     for (const gate of gates) {
       if (!gate.active) continue;
 
-      // Draw gate background
-      const bgColor = gate.passed
-        ? "#666666"
-        : gate.type === GateType.ADD
-        ? "#4CAF50"
-        : "#FF9800";
-      this.ctx.fillStyle = bgColor;
-      this.ctx.fillRect(gate.x, gate.y, gate.width, gate.height);
+      // Pulsing animation for active gates
+      const pulseScale = gate.passed ? 0 : Math.sin(time * 0.005) * 0.1 + 1;
 
-      // Draw gate border
+      this.ctx.save();
+      this.ctx.translate(gate.x + gate.width / 2, gate.y + gate.height / 2);
+      this.ctx.scale(pulseScale, pulseScale);
+
+      // Draw gate shadow for depth
+      if (!gate.passed) {
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor =
+          gate.type === GateType.ADD ? "#00ff00" : "#ff6600";
+      }
+
+      // Draw gate background with gradient
+      const gradient = this.ctx.createLinearGradient(
+        -gate.width / 2,
+        -gate.height / 2,
+        gate.width / 2,
+        gate.height / 2
+      );
+
+      if (gate.passed) {
+        gradient.addColorStop(0, "#666666");
+        gradient.addColorStop(1, "#444444");
+      } else if (gate.type === GateType.ADD) {
+        gradient.addColorStop(0, "#00ff00");
+        gradient.addColorStop(0.5, "#00cc00");
+        gradient.addColorStop(1, "#009900");
+      } else {
+        gradient.addColorStop(0, "#ff6600");
+        gradient.addColorStop(0.5, "#ff5500");
+        gradient.addColorStop(1, "#ff4400");
+      }
+
+      this.ctx.fillStyle = gradient;
+      this.ctx.fillRect(
+        -gate.width / 2,
+        -gate.height / 2,
+        gate.width,
+        gate.height
+      );
+
+      // Draw gate border with glow
       this.ctx.strokeStyle = "#ffffff";
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeRect(gate.x, gate.y, gate.width, gate.height);
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeRect(
+        -gate.width / 2,
+        -gate.height / 2,
+        gate.width,
+        gate.height
+      );
 
-      // Draw symbol and value
+      // Reset shadow
+      this.ctx.shadowBlur = 0;
+
+      // Draw symbol and value with text shadow
       this.ctx.fillStyle = "#ffffff";
-      this.ctx.font = "bold 36px Arial";
+      this.ctx.font = "bold 42px Arial";
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
+
+      // Text shadow for better visibility
+      this.ctx.shadowBlur = 10;
+      this.ctx.shadowColor = "#000000";
 
       const symbol = gate.type === GateType.ADD ? "+" : "×";
       const text = `${symbol}${gate.value}`;
 
-      this.ctx.fillText(
-        text,
-        gate.x + gate.width / 2,
-        gate.y + gate.height / 2
-      );
+      this.ctx.fillText(text, 0, 0);
+
+      this.ctx.shadowBlur = 0;
+      this.ctx.restore();
     }
   }
 
@@ -393,15 +440,23 @@ export class Renderer {
     this.ctx.fillStyle = "#aaaaaa";
     this.ctx.fillText("A/D or ← → - Move Left/Right", CANVAS_WIDTH - 20, 30);
     this.ctx.fillText("Auto-Shoot", CANVAS_WIDTH - 20, 55);
+
+    // Highlight gate instructions
+    this.ctx.font = "bold 18px Arial";
+    this.ctx.fillStyle = "#ffff00";
+    this.ctx.fillText("⚡ COLLECT COLORED GATES! ⚡", CANVAS_WIDTH - 20, 80);
+    this.ctx.font = "16px Arial";
+    this.ctx.fillStyle = "#00ff00";
     this.ctx.fillText(
-      "Collect gates to increase shooters!",
-      CANVAS_WIDTH - 20,
-      80
-    );
-    this.ctx.fillText(
-      "Green = Add (+) | Orange = Multiply (×)",
+      "🟩 GREEN = Add Shooters (+1, +2, +3)",
       CANVAS_WIDTH - 20,
       105
+    );
+    this.ctx.fillStyle = "#ff6600";
+    this.ctx.fillText(
+      "🟧 ORANGE = Multiply Shooters (×2, ×3)",
+      CANVAS_WIDTH - 20,
+      130
     );
 
     // Center - Mode indicator

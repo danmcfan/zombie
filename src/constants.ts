@@ -120,6 +120,6 @@ export const LANE_DIVIDER_X = CANVAS_WIDTH / 2;
 // Gate constants
 export const GATE_WIDTH = LANE_WIDTH * 0.8;
 export const GATE_HEIGHT = 60;
-export const GATE_SPAWN_INTERVAL = 4000; // milliseconds between gate spawns
-export const GATE_SPEED = 2; // pixels per frame
+export const GATE_SPAWN_INTERVAL = 3000; // milliseconds between gate spawns
+export const GATE_SPEED = 3; // pixels per frame
 export const INITIAL_SHOOTER_COUNT = 1;
