@@ -49,6 +49,7 @@ export class Game {
   private isDead: boolean = false;
   private lastShotgunSoundTime: number = 0;
   private shotgunSound: HTMLAudioElement;
+  private soundEnabled: boolean = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -86,7 +87,7 @@ export class Game {
     this.lastGateSpawnTime = Date.now();
 
     // Load shotgun sound
-    this.shotgunSound = new Audio("/shotgun.wav");
+    this.shotgunSound = new Audio("/zombie/shotgun.wav");
     this.shotgunSound.volume = 0.3;
     this.lastShotgunSoundTime = Date.now();
 
@@ -99,11 +100,26 @@ export class Game {
     // Keyboard
     window.addEventListener("keydown", (e) => {
       this.keys[e.key.toLowerCase()] = true;
+      // Enable sound on first key press
+      if (!this.soundEnabled) {
+        this.soundEnabled = true;
+      }
     });
 
     window.addEventListener("keyup", (e) => {
       this.keys[e.key.toLowerCase()] = false;
     });
+
+    // Enable sound on first click
+    window.addEventListener(
+      "click",
+      () => {
+        if (!this.soundEnabled) {
+          this.soundEnabled = true;
+        }
+      },
+      { once: true }
+    );
   }
 
   private gameLoop(currentTime: number): void {
@@ -123,8 +139,11 @@ export class Game {
   }
 
   private update(currentTime: number, deltaTime: number): void {
-    // Play shotgun sound periodically
-    if (currentTime - this.lastShotgunSoundTime > SHOTGUN_SOUND_INTERVAL) {
+    // Play shotgun sound periodically (only if sound is enabled)
+    if (
+      this.soundEnabled &&
+      currentTime - this.lastShotgunSoundTime > SHOTGUN_SOUND_INTERVAL
+    ) {
       this.shotgunSound.currentTime = 0;
       this.shotgunSound.play().catch(() => {
         // Ignore errors (e.g., autoplay policy)
@@ -512,8 +531,15 @@ export class Game {
           ? Math.floor(Math.random() * 3) + 1 // +1 to +3
           : Math.floor(Math.random() * 2) + 2; // x2 to x3
 
-      this.gates.push(createGate(0, leftLaneType, leftValue));
-      this.gates.push(createGate(1, rightLaneType, rightValue));
+      const leftGate = createGate(0, leftLaneType, leftValue);
+      const rightGate = createGate(1, rightLaneType, rightValue);
+
+      this.gates.push(leftGate);
+      this.gates.push(rightGate);
+
+      console.log(
+        `Spawned gates: Left ${leftGate.type} ${leftValue} at (${leftGate.x}, ${leftGate.y}), Right ${rightGate.type} ${rightValue} at (${rightGate.x}, ${rightGate.y})`
+      );
 
       this.lastGateSpawnTime = currentTime;
     }
@@ -554,7 +580,7 @@ export class Game {
     this.renderer.renderEffects();
 
     // Render UI
-    this.renderer.renderUI(this.player, this.gameState);
+    this.renderer.renderUI(this.player, this.gameState, this.soundEnabled);
 
     // Render death screen if dead
     if (this.isDead) {

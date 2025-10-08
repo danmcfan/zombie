@@ -18,7 +18,7 @@ export class Renderer {
 
     // Load zombie image
     this.zombieImage = new Image();
-    this.zombieImage.src = "/zombie.png";
+    this.zombieImage.src = "/zombie/zombie.png";
     this.zombieImage.onload = () => {
       this.zombieImageLoaded = true;
     };
@@ -325,13 +325,21 @@ export class Renderer {
    * Render gates
    */
   renderGates(gates: Gate[]): void {
+    if (gates.length > 0) {
+      console.log(`Rendering ${gates.length} gates`);
+    }
+
     const time = Date.now();
 
     for (const gate of gates) {
       if (!gate.active) continue;
 
+      console.log(
+        `  Gate at (${gate.x}, ${gate.y}), type: ${gate.type}, value: ${gate.value}, passed: ${gate.passed}`
+      );
+
       // Pulsing animation for active gates
-      const pulseScale = gate.passed ? 0 : Math.sin(time * 0.005) * 0.1 + 1;
+      const pulseScale = gate.passed ? 0.5 : Math.sin(time * 0.005) * 0.1 + 1;
 
       this.ctx.save();
       this.ctx.translate(gate.x + gate.width / 2, gate.y + gate.height / 2);
@@ -356,13 +364,13 @@ export class Renderer {
         gradient.addColorStop(0, "#666666");
         gradient.addColorStop(1, "#444444");
       } else if (gate.type === GateType.ADD) {
-        gradient.addColorStop(0, "#00ff00");
-        gradient.addColorStop(0.5, "#00cc00");
-        gradient.addColorStop(1, "#009900");
+        gradient.addColorStop(0, "#33ff33");
+        gradient.addColorStop(0.5, "#00ff00");
+        gradient.addColorStop(1, "#00cc00");
       } else {
-        gradient.addColorStop(0, "#ff6600");
-        gradient.addColorStop(0.5, "#ff5500");
-        gradient.addColorStop(1, "#ff4400");
+        gradient.addColorStop(0, "#ff8833");
+        gradient.addColorStop(0.5, "#ff6600");
+        gradient.addColorStop(1, "#ff5500");
       }
 
       this.ctx.fillStyle = gradient;
@@ -375,7 +383,7 @@ export class Renderer {
 
       // Draw gate border with glow
       this.ctx.strokeStyle = "#ffffff";
-      this.ctx.lineWidth = 4;
+      this.ctx.lineWidth = 5;
       this.ctx.strokeRect(
         -gate.width / 2,
         -gate.height / 2,
@@ -387,13 +395,13 @@ export class Renderer {
       this.ctx.shadowBlur = 0;
 
       // Draw symbol and value with text shadow
-      this.ctx.fillStyle = "#ffffff";
-      this.ctx.font = "bold 42px Arial";
+      this.ctx.fillStyle = gate.passed ? "#888888" : "#ffffff";
+      this.ctx.font = "bold 36px Arial";
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
 
       // Text shadow for better visibility
-      this.ctx.shadowBlur = 10;
+      this.ctx.shadowBlur = 8;
       this.ctx.shadowColor = "#000000";
 
       const symbol = gate.type === GateType.ADD ? "+" : "×";
@@ -409,7 +417,11 @@ export class Renderer {
   /**
    * Render UI
    */
-  renderUI(player: Player, gameState: GameState): void {
+  renderUI(
+    player: Player,
+    gameState: GameState,
+    soundEnabled: boolean = false
+  ): void {
     // Top left - Player stats
     this.ctx.fillStyle = "#ffffff";
     this.ctx.font = "bold 20px Arial";
@@ -429,6 +441,16 @@ export class Renderer {
       this.ctx.fillText(`Zombies: ${zombiesRemaining}`, 20, 120);
     } else {
       this.ctx.fillText("WAVE COMPLETE!", 20, 120);
+    }
+
+    // Sound indicator
+    this.ctx.fillStyle = soundEnabled ? "#00ff00" : "#ff0000";
+    this.ctx.fillText(`Sound: ${soundEnabled ? "ON 🔊" : "OFF 🔇"}`, 20, 150);
+    if (!soundEnabled) {
+      this.ctx.font = "14px Arial";
+      this.ctx.fillStyle = "#ffff00";
+      this.ctx.fillText("(Click or press any key)", 20, 170);
+      this.ctx.font = "bold 20px Arial";
     }
 
     // Top right - Instructions
