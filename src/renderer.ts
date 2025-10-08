@@ -278,9 +278,6 @@ export class Renderer {
       case "spitter":
         symbol = "💧";
         break;
-      case "exploder":
-        symbol = "💣";
-        break;
       default:
         return;
     }

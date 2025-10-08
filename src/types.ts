@@ -42,7 +42,6 @@ export const ZombieType = {
   RUNNER: "runner",
   TANK: "tank",
   SPITTER: "spitter",
-  EXPLODER: "exploder",
 } as const;
 
 export type ZombieType = (typeof ZombieType)[keyof typeof ZombieType];
@@ -62,7 +61,6 @@ export interface Zombie extends Entity {
   deathTime?: number;
   spitCooldown?: number; // For spitter type
   lastSpitTime?: number;
-  explosionRadius?: number; // For exploder type
 }
 
 export interface BloodParticle {
@@ -111,8 +109,8 @@ export interface ExplosionEffect {
 }
 
 export const GateType = {
-  ADD: 'add',
-  MULTIPLY: 'multiply'
+  ADD: "add",
+  MULTIPLY: "multiply",
 } as const;
 
 export type GateType = (typeof GateType)[keyof typeof GateType];

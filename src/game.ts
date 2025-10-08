@@ -1,12 +1,6 @@
 // Main game logic
 
-import type {
-  Player,
-  Bullet,
-  Zombie,
-  GameState,
-  Gate,
-} from "./types";
+import type { Player, Bullet, Zombie, GameState, Gate } from "./types";
 import { ZombieType, GateType } from "./types";
 import {
   CANVAS_WIDTH,
@@ -20,6 +14,7 @@ import {
   BULLET_LIFETIME,
   GATE_SPAWN_INTERVAL,
   GATE_SPEED,
+  SHOTGUN_SOUND_INTERVAL,
 } from "./constants";
 import {
   createPlayer,
@@ -31,11 +26,7 @@ import {
 } from "./entities";
 import { Renderer } from "./renderer";
 import { EffectsManager } from "./effects";
-import {
-  checkRectCircleCollision,
-  checkCircleCollision,
-  checkRectCollision,
-} from "./utils";
+import { checkRectCircleCollision, checkRectCollision } from "./utils";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -56,6 +47,8 @@ export class Game {
   private lastGateSpawnTime: number = 0;
   private deathTime: number = 0;
   private isDead: boolean = false;
+  private lastShotgunSoundTime: number = 0;
+  private shotgunSound: HTMLAudioElement;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -92,6 +85,11 @@ export class Game {
     // Initialize gate spawn time
     this.lastGateSpawnTime = Date.now();
 
+    // Load shotgun sound
+    this.shotgunSound = new Audio("/shotgun.wav");
+    this.shotgunSound.volume = 0.3;
+    this.lastShotgunSoundTime = Date.now();
+
     // Start game loop
     this.lastTime = performance.now();
     requestAnimationFrame(this.gameLoop.bind(this));
@@ -125,6 +123,15 @@ export class Game {
   }
 
   private update(currentTime: number, deltaTime: number): void {
+    // Play shotgun sound periodically
+    if (currentTime - this.lastShotgunSoundTime > SHOTGUN_SOUND_INTERVAL) {
+      this.shotgunSound.currentTime = 0;
+      this.shotgunSound.play().catch(() => {
+        // Ignore errors (e.g., autoplay policy)
+      });
+      this.lastShotgunSoundTime = currentTime;
+    }
+
     // Update player
     this.updatePlayer(currentTime, deltaTime);
 
@@ -415,74 +422,18 @@ export class Game {
         ) {
           this.damagePlayer(zombie.damage);
           zombie.lastAttackTime = currentTime;
-
-          // Exploder zombies explode on contact
-          if (zombie.type === ZombieType.EXPLODER) {
-            this.handleExploderDeath(zombie);
-            const index = this.zombies.indexOf(zombie);
-            if (index > -1) {
-              this.zombies.splice(index, 1);
-            }
-          }
         }
       }
     }
   }
 
   private handleZombieDeath(zombie: Zombie): void {
-    // Exploder zombies explode on death
-    if (zombie.type === ZombieType.EXPLODER) {
-      this.handleExploderDeath(zombie);
-    }
-
     // Create more blood particles
     const bloodParticles = this.effects.createBloodParticles(
       zombie.x,
       zombie.y
     );
     zombie.bloodParticles.push(...bloodParticles);
-  }
-
-  private handleExploderDeath(zombie: Zombie): void {
-    const explosionRadius = zombie.explosionRadius || 100;
-
-    // Create explosion effect
-    this.effects.createExplosion(zombie.x, zombie.y, explosionRadius);
-
-    // Damage player if in range
-    const playerCenterX = this.player.x + this.player.width / 2;
-    const playerCenterY = this.player.y + this.player.height / 2;
-
-    if (
-      checkCircleCollision(
-        zombie.x,
-        zombie.y,
-        explosionRadius,
-        playerCenterX,
-        playerCenterY,
-        this.player.width / 2
-      )
-    ) {
-      this.damagePlayer(zombie.damage);
-    }
-
-    // Damage other zombies in range
-    for (const otherZombie of this.zombies) {
-      if (otherZombie === zombie) continue;
-
-      if (
-        checkCircleCollision(
-          zombie.x,
-          zombie.y,
-          explosionRadius,
-          otherZombie.x,
-          otherZombie.y,
-          otherZombie.radius
-        )
-      ) {
-        damageZombie(otherZombie, 50);
-      }
-    }
   }
 
   private damagePlayer(damage: number): void {
@@ -527,7 +478,6 @@ export class Game {
     this.gameState.zombiesSpawned = 0;
     this.gameState.waveActive = true;
   }
-
 
   private updateGates(_currentTime: number): void {
     for (let i = this.gates.length - 1; i >= 0; i--) {

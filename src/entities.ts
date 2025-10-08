@@ -89,9 +89,7 @@ export function createZombie(type: ZombieType, lane?: number): Zombie {
   const laneWidth = CANVAS_WIDTH / numLanes;
   const laneStart = selectedLane * laneWidth;
   const spawnX =
-    laneStart +
-    Math.random() * (laneWidth - config.radius * 2) +
-    config.radius;
+    laneStart + Math.random() * (laneWidth - config.radius * 2) + config.radius;
 
   return {
     x: spawnX,
@@ -114,9 +112,6 @@ export function createZombie(type: ZombieType, lane?: number): Zombie {
       spitCooldown: config.spitCooldown,
       lastSpitTime: 0,
     }),
-    ...(type === ZombieType.EXPLODER && {
-      explosionRadius: config.explosionRadius,
-    }),
   };
 }
 
@@ -133,7 +128,6 @@ export function createRandomZombie(): Zombie {
   const selectedType = weightedRandomZombieType(weights) as ZombieType;
   return createZombie(selectedType);
 }
-
 
 /**
  * Update zombie AI - move straight down toward player
@@ -152,9 +146,6 @@ export function updateZombieAI(
   if (zombie.type === ZombieType.SPITTER) {
     // Spitters move slower
     zombie.velocityY = zombie.speed * 0.7;
-  } else if (zombie.type === ZombieType.EXPLODER) {
-    // Exploders rush down faster
-    zombie.velocityY = zombie.speed * 1.3;
   } else if (zombie.type === ZombieType.RUNNER) {
     // Runners move faster
     zombie.velocityY = zombie.speed * 1.2;
@@ -179,7 +170,6 @@ export function damageZombie(zombie: Zombie, damage: number): boolean {
 
   return false;
 }
-
 
 /**
  * Get zombie color based on type and health

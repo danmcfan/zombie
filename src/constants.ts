@@ -78,17 +78,6 @@ export const ZOMBIE_CONFIGS: Record<
     resourceDrop: 10,
     spawnWeight: 10,
   },
-  exploder: {
-    health: 40,
-    speed: 2.0,
-    damage: 35,
-    radius: 20,
-    explosionRadius: 100,
-    attackCooldown: 500,
-    color: "#7c4a4a",
-    resourceDrop: 12,
-    spawnWeight: 5,
-  },
 };
 
 // Wave system constants
@@ -123,3 +112,6 @@ export const GATE_HEIGHT = 60;
 export const GATE_SPAWN_INTERVAL = 3000; // milliseconds between gate spawns
 export const GATE_SPEED = 3; // pixels per frame
 export const INITIAL_SHOOTER_COUNT = 1;
+
+// Sound constants
+export const SHOTGUN_SOUND_INTERVAL = 1000; // milliseconds between shotgun sounds
